@@ -121,3 +121,21 @@ Cheks:
     futuro.
 
 */
+
+-- find all constraints
+select conname from pg_constraint where conrelid = 'category'::regclass;
+
+-- delete constraints
+alter table category drop constraint chk_category_type;
+
+-- add new constraint
+alter table category add constraint chk_category_type check (
+  category_type in (
+    'PRIMARY_PROBLEM',
+    'SECONDARY_PROBLEM',
+    'TOOL',
+    'INDUSTRY',
+    'PROJECT_TYPE',
+    'OTHER'
+  )
+);

@@ -1,0 +1,131 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/infraestructure/generated/prisma"
+}
+
+// --- ENUMS ---
+
+enum CategoryTypeEnum {
+  PRIMARY_PROBLEM
+  SECONDARY_PROBLEM
+  TOOL
+  INDUSTRY
+  PROJECT_TYPE
+  SOURCE_PLATFORM
+  OTHER
+}
+
+enum SourceTypeEnum {
+  SYSTEM
+  LLM
+  USER
+}
+
+enum CSTypeEnum {
+  PRODUCT_SPECIFICATION_CHARACTERISTIC
+  PARTY
+}
+
+enum PSNameTypeEnum {
+  PRODUCT_OFFERING_SPECIFICATION
+}
+
+// --- MODELS ---
+
+model Category {
+  id                 String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name               String           @db.VarChar(200)
+  description        String           @db.Text
+  category_type      CategoryTypeEnum @default(OTHER)
+  parent_category_id String?          @db.Uuid
+  is_root            Boolean          @default(false)
+  is_system          Boolean          @default(true)
+  approved           Boolean          @default(true)
+  is_active          Boolean          @default(true)
+  source             SourceTypeEnum   @default(SYSTEM)
+  usage_count        Int              @default(0)
+  display_order      Int              @default(0)
+  created_at         DateTime         @default(now()) @db.Timestamptz
+  updated_at         DateTime         @default(now()) @db.Timestamptz
+
+  // Relaciones
+  parent           Category?                 @relation("CategoryToParent", fields: [parent_category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children         Category[]                @relation("CategoryToParent")
+  product_offerings ProductOfferingCategory[]
+
+  @@unique([name, category_type], map: "uk_name_category_type")
+  @@index([parent_category_id], map: "idx_parent_category_id")
+  @@map("category")
+}
+
+model ProductOffering {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String   @db.VarChar(200)
+  description  String   @db.Text
+  llm_overview String?  @db.Text
+  last_updated DateTime @default(now()) @db.Timestamptz
+
+  // Relaciones
+  categories            ProductOfferingCategory[]
+  product_specification ProductSpecification?
+  prices                ProductOfferingPrice[]
+
+  @@map("product_offering")
+}
+
+model ProductOfferingCategory {
+  product_offering_id String   @db.Uuid
+  category_id         String   @db.Uuid
+  created_at          DateTime @default(now()) @db.Timestamptz
+
+  product_offering ProductOffering @relation(fields: [product_offering_id], references: [id], onDelete: Cascade)
+  category         Category        @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+  @@id([product_offering_id, category_id], map: "pk_product_offering_category")
+  @@index([category_id], map: "idx_product_offering_category_category_id")
+  @@map("product_offering_category")
+}
+
+model ProductSpecification {
+  id                  String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  product_offering_id String         @unique @db.Uuid
+  name                PSNameTypeEnum @default(PRODUCT_OFFERING_SPECIFICATION)
+  updated_at          DateTime       @default(now()) @db.Timestamptz
+
+  product_offering ProductOffering                    @relation(fields: [product_offering_id], references: [id], onDelete: Cascade)
+  characteristics CharacteristicSpecification[]
+
+  @@index([product_offering_id], map: "idx_product_specification_offering_id")
+  @@map("product_specification")
+}
+
+model CharacteristicSpecification {
+  id                       String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  product_specification_id String     @db.Uuid
+  key                      String     @db.VarChar(100)
+  value                    String     @db.Text
+  type                     CSTypeEnum @default(PRODUCT_SPECIFICATION_CHARACTERISTIC)
+
+  product_specification ProductSpecification @relation(fields: [product_specification_id], references: [id], onDelete: Cascade)
+
+  @@unique([product_specification_id, key], map: "uk_product_specification_id_key")
+  @@index([product_specification_id], map: "idx_characteristic_specification_ps_id")
+  @@map("characteristic_specification")
+}
+
+model ProductOfferingPrice {
+  id                  String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  product_offering_id String @db.Uuid
+  name                String @db.VarChar(100)
+  price_min           BigInt @default(0)
+  price_max           BigInt @default(0)
+
+  product_offering ProductOffering @relation(fields: [product_offering_id], references: [id], onDelete: Cascade)
+
+  @@index([product_offering_id], map: "idx_product_offering_price_offering_id")
+  @@map("product_offering_price")
+}

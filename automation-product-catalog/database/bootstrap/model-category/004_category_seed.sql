@@ -1452,7 +1452,7 @@ values
 
 -- OTHER - Sub Category
 insert into 
-  category ( ame, description, category_type, parent_category_id, is_root, is_system, approved, is_active, source, usage_count, display_order)
+  category ( name, description, category_type, parent_category_id, is_root, is_system, approved, is_active, source, usage_count, display_order)
 values 
   (
     'Test Voice AI',
@@ -1467,5 +1467,56 @@ values
     0,
     1
   );
+
+-- PROJECT_TYPE
+insert into 
+  category ( name, description, category_type, parent_category_id, is_root, is_system, approved, is_active, source, usage_count, display_order )
+values 
+  (
+    'ONE_TIME',
+    'A project with a clearly defined scope and a finite duration. Once the requested work is completed, the engagement ends.',
+    'PROJECT_TYPE',
+    null,
+    true,
+    true,
+    true,
+    true,
+    'SYSTEM',
+    0,
+    1
+  );
+
+insert into 
+  category ( name, description, category_type, parent_category_id, is_root, is_system, approved, is_active, source, usage_count, display_order )
+values 
+  (
+    'ONGOING',
+    'A long-term engagement where the client requires continuous support, maintenance or recurring work over time.',
+    'PROJECT_TYPE',
+    null,
+    true,
+    true,
+    true,
+    true,
+    'SYSTEM',
+    0,
+    2
+  );
+
+insert into 
+  category ( name, description, category_type, parent_category_id, is_root, is_system, approved, is_active, source, usage_count, display_order )
+values (
+    'COMPLEX',
+    'A project involving multiple phases, advanced technical requirements, or significant business complexity that typically requires specialized expertise and extended implementation.',
+    'PROJECT_TYPE',
+    null,
+    true,
+    true,
+    true,
+    true,
+    'SYSTEM',
+    0,
+    3
+);
 
 commit;
